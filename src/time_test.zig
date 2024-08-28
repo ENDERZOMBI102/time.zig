@@ -84,20 +84,20 @@ fn same(t: time.Time, u: *parsedTime) bool {
     const date = t.date();
     const clock = t.clock();
     const zone = t.zone();
-    const check = date.year != u.year or @enumToInt(date.month) != @enumToInt(u.month) or
+    const check = date.year != u.year or @intFromEnum(date.month) != @intFromEnum(u.month) or
         date.day != u.day or clock.hour != u.hour or clock.min != u.minute or clock.sec != u.second or
         !mem.eql(u8, zone.name, u.zone) or zone.offset != u.zone_offset;
     if (check) {
         return false;
     }
     return t.year() == u.year and
-        @enumToInt(t.month()) == @enumToInt(u.month) and
+        @intFromEnum(t.month()) == @intFromEnum(u.month) and
         t.day() == u.day and
         t.hour() == u.hour and
         t.minute() == u.minute and
         t.second() == u.second and
         t.nanosecond() == u.nanosecond and
-        @enumToInt(t.weekday()) == @enumToInt(u.weekday);
+        @intFromEnum(t.weekday()) == @intFromEnum(u.weekday);
 }
 
 test "TestSecondsToUTC" {
@@ -115,9 +115,9 @@ test "TestNanosecondsToUTC" {
     // try skip();
     for (nano_tests) |tv| {
         var golden = tv.golden;
-        const nsec = tv.seconds * @as(i64, 1e9) + @intCast(i64, golden.nanosecond);
+        const nsec = tv.seconds * @as(i64, 1e9) + @as(i64, @intCast(golden.nanosecond));
         var tm = time.unix(0, nsec, &Location.utc_local);
-        const new_nsec = tm.unix() * @as(i64, 1e9) + @intCast(i64, tm.nanosecond());
+        const new_nsec = tm.unix() * @as(i64, 1e9) + @as(i64, @intCast(tm.nanosecond()));
         testing.expectEqual(new_nsec, nsec);
         testing.expect(same(tm, &golden));
     }
@@ -137,15 +137,15 @@ test "TestSecondsToLocalTime" {
     }
 }
 
-test "TestNanosecondsToUTC" {
+test "TestNanosecondsToUTCLocated" {
     // try skip();
     var loc = try Location.load("US/Pacific");
     defer loc.deinit();
     for (nano_local_tests) |tv| {
         var golden = tv.golden;
-        const nsec = tv.seconds * @as(i64, 1e9) + @intCast(i64, golden.nanosecond);
+        const nsec = tv.seconds * @as(i64, 1e9) + @as(i64, @intCast(golden.nanosecond));
         var tm = time.unix(0, nsec, &loc);
-        const new_nsec = tm.unix() * @as(i64, 1e9) + @intCast(i64, tm.nanosecond());
+        const new_nsec = tm.unix() * @as(i64, 1e9) + @as(i64, @intCast(tm.nanosecond()));
         testing.expectEqual(new_nsec, nsec);
         testing.expect(same(tm, &golden));
     }
@@ -246,8 +246,8 @@ test "TestFormatShortYear" {
         99999,   100000,  100001,
     };
     for (years) |y| {
-        const m = @enumToInt(January);
-        const x = @intCast(isize, m);
+        const m = @intFromEnum(January);
+        const x = @as(isize, m);
         var tt = time.date(y, x, 1, 0, 0, 0, 0, &Location.utc_local);
         try buf.resize(0);
         try tt.formatBuffer(buf.writer(), "2006.01.02");
@@ -276,7 +276,7 @@ test "TestNextStdChunk" {
     };
     var buf = std.ArrayList([]const u8).init(std.testing.allocator);
     defer buf.deinit();
-    for (next_std_chunk_tests) |marked, i| {
+    for (next_std_chunk_tests) |marked| {
         try markChunk(&buf, marked);
         // FIXME: fix check, buf.items doesn't work
         // testing.expect(std.mem.eql([]const u8, buf.items, bufM.items));
@@ -304,7 +304,7 @@ fn markChunk(buf: *std.ArrayList([]const u8), format: []const u8) !void {
     var s = removeParen(format);
 
     while (s.len > 0) {
-        var ch = time.nextStdChunk(s);
+        const ch = time.nextStdChunk(s);
         try buf.append(ch.prefix);
         if (ch.chunk != .none) {
             try buf.append("(");
