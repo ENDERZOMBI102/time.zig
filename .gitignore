@@ -1,2 +1,4 @@
+.idea
+.zig-cache
 zig-cache
 timezone-data
