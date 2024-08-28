@@ -1,0 +1,20 @@
+.{
+	.name = "time",
+	.version = "0.6.1",
+	// Currently unused by zig
+	.minimum_zig_version = "0.6.0",
+
+	// The dependencies of the project.
+	.dependencies = .{ },
+
+	// This makes the listed file/folders be included in the package.
+	.paths = .{
+		"build.zig",
+		"build.zig.zon",
+		"src",
+		"formating_time_with_zig.md",
+		"LICENSE",
+		"README.md",
+		"RELEASE_NOTES.md",
+	},
+}
